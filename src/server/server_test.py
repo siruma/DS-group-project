@@ -13,7 +13,7 @@ TEST_PORT = 8080
 # Define test cases
 def test_server_connection():
     # Start the server in a separate thread
-    server_thread = threading.Thread(target=run_server, args=(TEST_HOST, TEST_PORT))
+    server_thread = threading.Thread(target=run_server, args=(TEST_HOST, TEST_PORT),daemon=True)
     server_thread.start()
     time.sleep(1) 
     
