@@ -16,6 +16,9 @@ def handle_shutdown():
     if server_socket:
         server_socket.close()
 
+def handle_shutdown_key(sig, frame):
+    handle_shutdown()
+    
 
 def authenticate(client_socket):
     logging.debug("Authentication")
@@ -41,20 +44,20 @@ def authenticate(client_socket):
         return False
 
 def handle_client(client_socket):
-    client_socket.sendall(b'Welcome')
+    client_socket.sendall(pickle.dumps('Welcome'))
     reply = ""
-    
-    while True:
-        if(authenticate(client_socket)):
+    if(authenticate(client_socket)):
+        while True: 
             try:
                 data = pickle.loads(client_socket.recv(2028))
                 if not data:
                     logging.info("Disconnected from player")
                 else:
-                    logging.debug("Received: {data}")
-                    logging.debug("Sending : {reply}")
+                    reply = "server: "  + data # replace with real game data
+                    logging.debug(f"Received: {data}")
+                    logging.debug(f"Sending : {reply}")
                     client_socket.sendall(pickle.dumps(reply))
-            except ConnectionAbortedError as e:
+            except Exception as e:
                 logging.error("Error handling client: %s", e)
                 break
     logging.info("Lost connection")
@@ -88,21 +91,24 @@ def run_server(address='localhost', port=8080):
 
 def input_tread():
     while keep_running:
-        cmd = input("Enter command: ")
-        if cmd == "quit":
-            handle_shutdown()
-        elif cmd == "help":
-            print("To shutdown the server enter 'quit'")
-        else:
-            print("Error: not a command, enter 'help' for more information")
+        try:
+            cmd = input("Enter command: ")
+            if cmd == "quit":
+                handle_shutdown()
+            elif cmd == "help":
+                print("To shutdown the server enter 'quit'")
+            else:
+                print("Error: not a command, enter 'help' for more information")
+        except EOFError:
+            break
 
 
 
 if __name__ == "__main__":
     
     # Register the signal handler for SIGINT (Ctrl+C) and SIGTERM (termination signal)
-    signal.signal(signal.SIGINT, handle_shutdown)
-    signal.signal(signal.SIGTERM, handle_shutdown)
+    signal.signal(signal.SIGINT, handle_shutdown_key)
+    signal.signal(signal.SIGTERM, handle_shutdown_key)
     
 
     parser = argparse.ArgumentParser("Tic-tac-toe server")
