@@ -4,6 +4,9 @@ import hashlib
 
 class Authentication():
 
+    '''
+    Init function for Authentication
+    '''
     def __init__(self) -> None:
         try:
             self.conn = sqlite3.connect('users.db')
@@ -13,6 +16,13 @@ class Authentication():
         except Exception as e:
             print(f"ERROR: {e}")
 
+    '''
+    Register the user to database
+
+    self: Authentication
+    username: string of the username
+    password: hashed password
+    '''
     def register_user(self, username, password):
         hashed_pass = hashlib.sha256(password.encode()).hexdigest()
         try:
@@ -22,11 +32,22 @@ class Authentication():
             return False # if the user already in the database
         return True
 
+    '''
+    Check the user from database
+
+    self: Authentication
+    username: string of the username
+    password: hashed password
+    '''
     def authenticate_user(self, username, password):
         hashed_pass = hashlib.sha256(password.encode()).hexdigest()
         self.cursor.execute('''SELECT * FROM users WHERE username=? AND password=?''', (username, hashed_pass))
         return self.cursor.fetchone() is not None
     
+    '''
+    Closing the database
+
+    self: Authentication
+    '''
     def close_database(self):
         self.conn.close()
-        
