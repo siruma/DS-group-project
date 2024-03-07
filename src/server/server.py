@@ -5,48 +5,71 @@ import pickle
 import logging
 import signal
 import threading
+from authentication import Authentication
 
 keep_running = True
 server_socket = None
 
+'''
+Shutdown the server
+'''
 def handle_shutdown():
     global keep_running
     logging.info("Shutting down the server ....")
     keep_running = False
     if server_socket:
         server_socket.close()
+    
 
 def handle_shutdown_key(sig, frame):
     handle_shutdown()
     
 
-def authenticate(client_socket):
+'''
+Client authentication
+
+client_socket: Client socket
+return: True if client password is ok
+'''
+def client_authenticate(client_socket):
+    # Start the authentication DB
+    authenticate_db = Authentication()
     logging.debug("Authentication")
     # Send authentication request to client
-    USERNAME = 'user'
-    PASSWORD = 'password'
     reply = 'Enter username: '
     client_socket.sendall(pickle.dumps(reply))
     username = pickle.loads(client_socket.recv(2028))
-    logging.debug("Username: {username}")
+    logging.debug(f"Username: {username}")
     reply = 'Enter password: '
     client_socket.send(pickle.dumps(reply))
     password = pickle.loads(client_socket.recv(2028))
-
+    logging.debug(f"password: {password}")
+    if authenticate_db.register_user(username,password):
+        logging.info("User added")
+    
     # Check if username and password are correct
-    if username == USERNAME and password == PASSWORD:
+    if authenticate_db.authenticate_user(username,password):
         reply = 'Authentication successful.'
         client_socket.send(pickle.dumps(reply))
+        if authenticate_db:
+            authenticate_db.close_database()
         return True
     else:
         reply = 'Authentication failed.'
         client_socket.send(pickle.dumps(reply))
+        if authenticate_db:
+            authenticate_db.close_database()
         return False
 
+
+'''
+Handler for incoming clients
+client_socket: client socket
+'''
 def handle_client(client_socket):
     client_socket.sendall(pickle.dumps('Welcome'))
     reply = ""
-    if(authenticate(client_socket)):
+    if(client_authenticate(client_socket)):
         while True: 
             try:
                 data = pickle.loads(client_socket.recv(2028))
@@ -63,11 +86,18 @@ def handle_client(client_socket):
     logging.info("Lost connection")
     client_socket.close()
 
-def run_server(address='localhost', port=8080):
+'''
+Run main server for clients
+
+address: server address
+port: server listen port
+timeout: server socket timeout value
+'''
+def run_server(address='localhost', port=8080,timeout=10):
     # Create TCP socket
     global server_socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+    server_socket.settimeout(timeout)
     # Bind the socket to address and port
     server_address = (address, port)
     server_socket.bind(server_address)
@@ -83,12 +113,17 @@ def run_server(address='localhost', port=8080):
 
             # Handle client request
             threading.Thread(target=handle_client, args=(client_socket,)).start()
+    except socket.timeout:
+        logging.error("Server timeout")
     except socket.error as e:
         logging.error(e)
     finally:
         # Close the connection
-        server_socket.close()
+        handle_shutdown()
 
+'''
+Handler for command line inputs
+'''
 def input_tread():
     while keep_running:
         try:
@@ -116,6 +151,7 @@ if __name__ == "__main__":
     # Arguments
     parser.add_argument('--address', type=str, help="Server ip address")
     parser.add_argument('--port', type=int, help="Server port")
+    parser.add_argument('--timeout', type=int, help="Server timeout")
     parser.add_argument('--log-level', choices=['DEBUG', 'INFO'], default='INFO', help="Logging level")
     
     # Parse the command-line arguments
@@ -128,13 +164,16 @@ if __name__ == "__main__":
     # Configure server arguments
     address = 'localhost'
     port = 8080
+    timeout = 10
 
     if args.address is not None:
         address = args.address
     if args.port is not None:
         port = args.port
+    if args.timeout is not None:
+        timeout = args.timeout
     
-    server_tread = threading.Thread(target=run_server,args=(address,port))
+    server_tread = threading.Thread(target=run_server,args=(address,port,timeout))
     server_tread.start()
     input_tread()
     
