@@ -37,5 +37,5 @@ jobs:
     - name: Test with pytest
       run: |
         touch users.db
-        pytest src/server/server_test.py
+        pytest -vs src/server/server_test.py
         rm -f users.db
