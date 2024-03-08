@@ -24,25 +24,6 @@ def randomize_string(str):
     return ''.join(chars)
 
 
-def test_authentication():
-    print("\nStart authentication test")
-    authen = Authentication()
-    authen.register_user(USER, PASSWORD)
-    assert authen.authenticate_user(USER, PASSWORD)
-    authen.close_database()
-
-
-def test_authentication_multi():
-    print("\nStart authentication with multiple user test")
-    authen = Authentication()
-    authen.register_user(USER, PASSWORD)
-    authen.register_user(randomize_string(USER), randomize_string(PASSWORD))
-    authen.register_user(randomize_string(USER), randomize_string(PASSWORD))
-    authen.register_user(randomize_string(USER), randomize_string(PASSWORD))
-    assert authen.authenticate_user(USER, PASSWORD)
-    authen.close_database()
-
-
 # Helper function for clients
 def client(server_addr, ID):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -76,6 +57,25 @@ def client(server_addr, ID):
         else:
             time.sleep(10)
     client_socket.close()
+
+
+def test_authentication():
+    print("\nStart authentication test")
+    authen = Authentication()
+    authen.register_user(USER, PASSWORD)
+    assert authen.authenticate_user(USER, PASSWORD)
+    authen.close_database()
+
+
+def test_authentication_multi():
+    print("\nStart authentication with multiple user test")
+    authen = Authentication()
+    authen.register_user(USER, PASSWORD)
+    authen.register_user(randomize_string(USER), randomize_string(PASSWORD))
+    authen.register_user(randomize_string(USER), randomize_string(PASSWORD))
+    authen.register_user(randomize_string(USER), randomize_string(PASSWORD))
+    assert authen.authenticate_user(USER, PASSWORD)
+    authen.close_database()
 
 
 # Define test cases
