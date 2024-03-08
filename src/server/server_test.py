@@ -147,4 +147,4 @@ def test_server_connection():
 
 
 if __name__ == "__main__":
-    pytest.main(['-vs'])
+    pytest.main(['-v'])
