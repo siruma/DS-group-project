@@ -5,9 +5,14 @@ import pickle
 import logging
 import signal
 import threading
+import time
 from authentication import Authentication
+from GameServer import GameServer
 
 keep_running = True
+players = {}
+viewers = []
+game_server = None
 server_socket = None
 
 '''
@@ -64,26 +69,75 @@ def client_authenticate(client_socket):
 
 '''
 Handler for incoming clients
+
 client_socket: client socket
+player_ID: the ID of player
+timeout: server timeout value
 '''
-def handle_client(client_socket):
+def handle_client(client_socket, player_ID, timeout):
+    global players
     client_socket.sendall(pickle.dumps('Welcome'))
     reply = ""
     if(client_authenticate(client_socket)):
         while True: 
             try:
-                data = pickle.loads(client_socket.recv(2028))
-                if not data:
-                    logging.info("Disconnected from player")
+                if(len(players) < 2):
+                    client_socket.sendall(pickle.dumps('102: Waiting for opponent...'))
+                    logging.debug(f"Player {player_ID} is waiting")
+                    time.sleep(10)
+                elif game_server.player_turn(player_ID):
+                    game_server.player_turn_start(player_ID)
+                    client_socket.sendall(pickle.dumps(f'100: Player {player_ID} turn.'))
+                    data = pickle.loads(client_socket.recv(2028))
+                    if not data:
+                        logging.info("Disconnected from player")
+                    else:
+                        reply = "server: "  + data # replace with real game data
+                        logging.debug(f"Received: {data}")
+                        logging.debug(f"Sending : {reply}")
+                        client_socket.sendall(pickle.dumps(reply))
+                    game_server.player_turn_end(player_ID)
                 else:
-                    reply = "server: "  + data # replace with real game data
-                    logging.debug(f"Received: {data}")
-                    logging.debug(f"Sending : {reply}")
-                    client_socket.sendall(pickle.dumps(reply))
+                    client_socket.sendall(pickle.dumps('102: Waiting for opponent move...'))
+                    logging.debug(f"Player {player_ID} is waiting")
+                    time.sleep(10)
             except Exception as e:
-                logging.error("Error handling client: %s", e)
+                logging.error(f"Error handling player_client {player_ID}: {e}")
                 break
-    logging.info("Lost connection")
+    logging.info("Lost connection to player")
+    # remove player from players
+    players.pop(player_ID)
+    game_server.remove_player(player_ID)
+    if(len(players) == 0 ):
+        # Set timeout if the is no player and shutdown if there is no viewer
+        logging.debug(f"Player {player_ID} set timeout")
+        time.sleep(timeout)
+        if(len(viewers) == 0):
+            handle_shutdown()
+    client_socket.close()
+
+'''
+Handle viewer socket
+
+client_socket: client socket
+'''
+def handle_viewer(client_socket):
+    client_socket.sendall(pickle.dumps('Welcome'))
+    game_data = ""
+    while True:
+        try:
+            if(len(players) < 2):
+                client_socket.sendall(pickle.dumps('Waiting for opponents...'))
+            else:
+                game_data = "server: "  # replace with real game data
+                logging.debug(f"Sending: {game_data}")
+                client_socket.sendall(pickle.dumps(game_data))
+                viewer_reply = pickle.loads(client_socket.recv(2028))
+                logging.debug(f"Received: {viewer_reply}")
+        except Exception as e:
+            logging.error(f"Error handling viewer_client: {e}")
+            break
+    logging.info("Lost connection to viewer")
     client_socket.close()
 
 '''
@@ -95,9 +149,10 @@ timeout: server socket timeout value
 '''
 def run_server(address='localhost', port=8080,timeout=10):
     # Create TCP socket
-    global server_socket
+    global server_socket, players, viewers, game_server
+    game_server = GameServer()
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.settimeout(timeout)
+    
     # Bind the socket to address and port
     server_address = (address, port)
     server_socket.bind(server_address)
@@ -112,7 +167,16 @@ def run_server(address='localhost', port=8080,timeout=10):
             logging.info(f"Connection from {client_address}")
 
             # Handle client request
-            threading.Thread(target=handle_client, args=(client_socket,)).start()
+            if(len(players) < 2):
+                player_ID = len(players)+1
+                player = threading.Thread(target=handle_client, args=(client_socket,player_ID,timeout)).start()
+                game_server.add_player(player)
+                players[player_ID] = player
+            else:
+                viewer = threading.Thread(target=handle_viewer, args=(client_socket,)).start()
+                viewers.append(viewer)
+            
+
     except socket.timeout:
         logging.error("Server timeout")
     except socket.error as e:
