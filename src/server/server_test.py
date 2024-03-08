@@ -79,8 +79,8 @@ def test_authentication_multi():
 
 
 # Define test cases
-@pytest.mark.skip("Not working in GitHub")
-def test_server_connection():
+@pytest.mark.skip("Not working in GitHub")  # Comment this if running locally
+def test_server_connection_with_two_client():
     print("\nStart test")
     threads = []
     # Start the server in a separate thread
@@ -110,6 +110,40 @@ def test_server_connection():
         print("Wait the sockets")
         for thread in threads:
             thread.join()  # Wait for all threads to finish
+
+
+# Test server authentication
+def test_server_connection():
+    print("\nStart test")
+    # Start the server in a separate thread
+    server_thread = threading.Thread(name="server", target=run_server,
+                                     args=(TEST_HOST, TEST_PORT, TIMEOUT),
+                                     daemon=True)
+    server_thread.start()
+    time.sleep(1)
+
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_addr = (TEST_HOST, TEST_PORT)
+    try:
+        client_socket.connect(server_addr)
+        response = pickle.loads(client_socket.recv(2048))
+        print("Response from server:", response)
+        response = pickle.loads(client_socket.recv(2048))
+        print(response)
+        reply = 'user'
+        client_socket.sendall(pickle.dumps(reply))
+        response = pickle.loads(client_socket.recv(2048))
+        print(response)
+        reply = 'password'
+        client_socket.sendall(pickle.dumps(reply))
+        response = pickle.loads(client_socket.recv(2048))
+        print(response)
+    except Exception as e:
+        print("Error:", e)
+    finally:
+        # Close the socket
+        client_socket.close()
+        server_thread.join()  # Wait for the server thread to finish
 
 
 if __name__ == "__main__":
