@@ -24,12 +24,14 @@ def randomize_string(str):
     return ''.join(chars)
 
 def test_authentication():
+    print("Start authentication test")
     authen = Authentication()
     authen.register_user(USER,PASSWORD)
     assert authen.authenticate_user(USER,PASSWORD) == True
     authen.close_database()
 
 def test_authentication_multi():
+    print("Start authentication with multiple user test")
     authen = Authentication()
     authen.register_user(USER,PASSWORD)
     authen.register_user(randomize_string(USER),randomize_string(PASSWORD))
@@ -80,10 +82,12 @@ def test_server_connection():
     server_thread = threading.Thread(name="server",target=run_server, args=(TEST_HOST, TEST_PORT, TIMEOUT),daemon=True)
     server_thread.start()
     threads.append(server_thread)
+    assert len(threads) == 1
+
     time.sleep(1) 
     
     server_addr =  (TEST_HOST, TEST_PORT)
-    
+    # Start the clients in a separate threads
     try:
         for i in range(2):
             client_thread = threading.Thread(name=f'client{i}',target=client,args=(server_addr,i+1))
@@ -94,6 +98,7 @@ def test_server_connection():
         print("Error:", e)   
     finally:
         # Close the socket
+        assert len(threads) == 3
         print("Wait the sockets")
         for thread in threads:
             thread.join() # Wait for all threads to finish
