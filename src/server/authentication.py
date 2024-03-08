@@ -1,6 +1,8 @@
 # Authentication server
+import logging
 import sqlite3
 import hashlib
+
 
 class Authentication():
 
@@ -26,10 +28,12 @@ class Authentication():
     def register_user(self, username, password):
         hashed_pass = hashlib.sha256(password.encode()).hexdigest()
         try:
-            self.cursor.execute('''INSERT INTO users VALUES (?, ?)''', (username, hashed_pass))
+            self.cursor.execute('''INSERT INTO users VALUES (?, ?)''',
+                                (username, hashed_pass))
             self.conn.commit()
         except sqlite3.IntegrityError as e:
-            return False # if the user already in the database
+            logging.error(f"Authentication: {e}")
+            return False  # if the user already in the database
         return True
 
     '''
@@ -41,9 +45,11 @@ class Authentication():
     '''
     def authenticate_user(self, username, password):
         hashed_pass = hashlib.sha256(password.encode()).hexdigest()
-        self.cursor.execute('''SELECT * FROM users WHERE username=? AND password=?''', (username, hashed_pass))
+        self.cursor.execute(
+            '''SELECT * FROM users WHERE username=? AND password=?''',
+            (username, hashed_pass))
         return self.cursor.fetchone() is not None
-    
+
     '''
     Closing the database
 
