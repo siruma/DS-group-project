@@ -17,8 +17,10 @@ class GameServer:
     def add_player(self, player_thread):
         if (self.player1 is None):
             self.player1 = player_thread
+            logging.debug("GameServer: adding player 1")
         elif (self.player2 is None):
             self.player2 = player_thread
+            logging.debug("GameServer: adding player 2")
         else:
             logging.error("GameServer: Player queue is full.")
 
@@ -67,7 +69,9 @@ class GameServer:
     player_ID: ID of the player
     '''
     def player_turn(self, player_ID):
-        if (self.player1 is None and self.player2 is None):
+        if not (self.player1 is None and self.player2 is None):
             if (player_ID == self.current_turn):
+                logging.debug(f"GameServer: Player {player_ID} turn")
                 return True
+        logging.debug(f"GameServer: Player {player_ID}, current {self.current_turn} ")
         return False

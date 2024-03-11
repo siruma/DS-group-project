@@ -7,13 +7,13 @@ import socket
 import threading
 import time
 import hashlib
-from server import run_server
+import server
 from authentication import Authentication
 
 # Define constants for test configuration
 TEST_HOST = 'localhost'
 TEST_PORT = 8080
-TIMEOUT = 10
+TIMEOUT = 1
 USER = 'user'
 PASSWORD = 'password'
 
@@ -93,12 +93,14 @@ def test_authentication_multi():
 
 
 # Define test cases
-@pytest.mark.skip("Not working in GitHub")  # Comment this if running locally
+#@pytest.mark.skip("Not working in GitHub")  # Comment this if running locally
 def test_server_connection_with_two_client():
     print("\nStart test")
     threads = []
+    game_server = server.Server()
     # Start the server in a separate thread
-    server_thread = threading.Thread(name="server", target=run_server,
+    server_thread = threading.Thread(name="server",
+                                     target=game_server.run_server,
                                      args=(TEST_HOST, TEST_PORT, TIMEOUT),
                                      daemon=True)
     server_thread.start()
@@ -127,11 +129,12 @@ def test_server_connection_with_two_client():
 
 
 # Test server authentication
-@pytest.mark.skip("Not working in GitHub")  # Comment this if running locally
+#@pytest.mark.skip("Not working in GitHub")  # Comment this if running locally
 def test_server_connection():
     print("\nStart test")
     # Start the server in a separate thread
-    server_thread = threading.Thread(target=run_server,
+    game_server = server.Server()
+    server_thread = threading.Thread(target=game_server.run_server,
                                      args=(TEST_HOST, TEST_PORT, TIMEOUT),
                                      daemon=True)
     server_thread.start()
