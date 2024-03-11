@@ -105,21 +105,21 @@ class Server():
                             # Send turn info and grid, recv move data
                             logging.debug(f"Sending: 100: Player {player_ID} turn.")
                             client_socket.sendall( pickle.dumps(f'100: Player {player_ID} turn.'))
-                            time.sleep(1)
+                            time.sleep(1)  # Sleep 1 sec before sending another message
                             client_socket.sendall(pickle.dumps(grid))
                             logging.debug(f"Grid sent to player {player_ID}")
-                            data = pickle.loads(client_socket.recv(2028))
+                            data = pickle.loads(client_socket.recv(2028))  # Get the move
                             logging.debug(f"Received: {data}")
                             if not isinstance(data, int):
                                 # Wrong data
                                 logging.info("Wrong data from player {player_ID}")
                             else:
-                                # Adding the mark
+                                # Adding the mark and sending the result
                                 reply = self.game.add_mark_to_slot(data)
                                 logging.debug(f"Sending : {reply}")
                                 client_socket.sendall(pickle.dumps(reply))
                                 self.client_status = pickle.loads(client_socket.recv(2028))
-                        self.game_server.player_turn_end(player_ID)
+                        self.game_server.player_turn_end(player_ID)  # Receive player status ok/quit
                         logging.debug(f"Player {player_ID} game status:"
                                       + f" {self.client_status}")
                         if (self.client_status == 'quit' or not isinstance(data, int) or not self.keep_running):
@@ -241,12 +241,18 @@ def input_tread(server):
         try:
             cmd = input("Enter command: ")
             if cmd == "quit":
+                print("Shutdown...")
                 server.handle_shutdown()
+            elif cmd == "status":
+                print(f"Running: {server.keep_running}")
+                print(f"Players: {len(server.players)}")
+                print(f"viewers: {len(server.viewers)}")
             elif cmd == "help":
                 print("To shutdown the server enter 'quit'")
+                print("To check the status enter 'status' ")
             else:
                 print("Error: not a command, enter "
-                      + "'help' for more information")
+                      + "'help' for more information about commands")
         except EOFError:
             break
 
@@ -259,7 +265,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, server.handle_shutdown_key)
     signal.signal(signal.SIGTERM, server.handle_shutdown_key)
 
-    parser = argparse.ArgumentParser("Tic-tac-toe server")
+    parser = argparse.ArgumentParser("Tic-tac-toe: server.py")
 
     # Arguments
     parser.add_argument('--address', type=str, help="Server ip address", default='localhost')
