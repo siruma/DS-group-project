@@ -216,13 +216,15 @@ class Server():
 
                 # Handle client request
                 if (len(self.players) < 2):
-                    player_ID = len(self.players)+1
-                    player = threading.Thread(target=self.handle_client, args=(client_socket, player_ID)).start()
+                    player_ID = len(self.players) + 1
+                    player = threading.Thread(target=self.handle_client, args=(client_socket, player_ID))
                     self.game_server.add_player(player)
                     self.players[player_ID] = player
+                    player.start()
                 else:
-                    viewer = threading.Thread(target=self.handle_viewer, args=(client_socket,)).start()
+                    viewer = threading.Thread(target=self.handle_viewer, args=(client_socket,))
                     self.viewers.append(viewer)
+                    viewer.start()
         except socket.timeout:
             logging.error("Server timeout")
         except socket.error as e:
