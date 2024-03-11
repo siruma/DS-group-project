@@ -42,19 +42,33 @@ def client(server_addr, ID):
     print(f"{ID}: {response}")
     response_code = '100'
     index = 0
+    moves = [0, 1, 2, 3, 4, 5, 6, 7, 8]
     while True:
-        if (index == 4):
-            break
         response = pickle.loads(client_socket.recv(2048))
         response_code = response[:3]
         print(f"{ID}: {response}")
         if (response_code == '100'):
-            reply = f'Data for game {index}'
-            client_socket.sendall(pickle.dumps(reply))
+            print(f"{ID}: Wait the game grid")
+            game_grid = pickle.loads(client_socket.recv(2048))
+            random_move = random.choice(moves)
+            moves.remove(random_move)
+            print(f"{ID} move: {random_move}")
+            client_socket.sendall(pickle.dumps(random_move))
             response = pickle.loads(client_socket.recv(2048))
             print(f"{ID}: {response}")
             index += 1
+            if (index < 4):
+                print(f"{ID}: index: {index}, ok")
+                client_socket.sendall(pickle.dumps('ok'))
+            else:
+                print(f"{ID}: quit")
+                client_socket.sendall(pickle.dumps('quit'))
+                time.sleep(10)
+                break
+        elif (response_code == '200'):
+            break
         else:
+            print(f"{ID} Sleep")
             time.sleep(10)
     client_socket.close()
 
