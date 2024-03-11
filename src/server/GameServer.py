@@ -69,7 +69,7 @@ class GameServer:
     player_ID: ID of the player
     '''
     def player_turn(self, player_ID):
-        if not (self.player1 is None and self.player2 is None):
+        if (self.player1 is None and self.player2 is None):
             if (player_ID == self.current_turn):
                 logging.debug(f"GameServer: Player {player_ID} turn")
                 return True
