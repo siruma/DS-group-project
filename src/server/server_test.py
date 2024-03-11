@@ -72,7 +72,7 @@ def client(server_addr, ID):
             time.sleep(10)
     client_socket.close()
 
-
+# Authentication test
 def test_authentication():
     print("\nStart authentication test")
     authen = Authentication()
@@ -80,7 +80,7 @@ def test_authentication():
     assert authen.authenticate_user(USER, PASSWORD)
     authen.close_database()
 
-
+# Authentication multiple account 
 def test_authentication_multi():
     print("\nStart authentication with multiple user test")
     authen = Authentication()
@@ -93,7 +93,7 @@ def test_authentication_multi():
 
 
 # Define test cases
-#@pytest.mark.skip("Not working in GitHub")  # Comment this if running locally
+@pytest.mark.skip("Not working in GitHub")  # Comment this if running locally
 def test_server_connection_with_two_client():
     print("\nStart test")
     threads = []
@@ -129,7 +129,7 @@ def test_server_connection_with_two_client():
 
 
 # Test server authentication
-#@pytest.mark.skip("Not working in GitHub")  # Comment this if running locally
+@pytest.mark.skip("Not working in GitHub")  # Comment this if running locally
 def test_server_connection():
     print("\nStart test")
     # Start the server in a separate thread
