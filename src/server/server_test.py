@@ -117,7 +117,7 @@ def test_server_start_up():
     assert not game_server.keep_running
 
 # Define test cases
-#@pytest.mark.skip("Not working in GitHub")  # Comment this if running locally
+@pytest.mark.skip("Not working in GitHub")  # Comment this if running locally
 def test_server_connection_with_two_client():
     print("\nStart test")
     threads = []
@@ -153,7 +153,7 @@ def test_server_connection_with_two_client():
 
 
 # Test server authentication
-#@pytest.mark.skip("Not working in GitHub")  # Comment this if running locally
+@pytest.mark.skip("Not working in GitHub")  # Comment this if running locally
 def test_server_connection():
     print("\nStart test")
     # Start the server in a separate thread
