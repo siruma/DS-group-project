@@ -8,15 +8,14 @@ import threading
 import time
 from authentication import Authentication
 from GameServer import GameServer
-from TicTacCommandline import TictacGame
+from GameGrid import GameGrid
 
 keep_running = True
 players = {}
 viewers = []
 game_server = None
 server_socket = None
-client_status = ""
-game = None
+gameGrid = GameGrid()
 
 
 def handle_shutdown():
@@ -80,84 +79,58 @@ def handle_client(client_socket, player_ID, timeout):
     player_ID: the ID of player
     timeout: server timeout value
     '''
-    global players, game, client_status
+    global players
+    global gameGrid
     client_socket.sendall(pickle.dumps('Welcome'))
     reply = ""
-    
     if (client_authenticate(client_socket)):
         while True:
             try:
-                if (len(players) < 2):
-                    # Waiting second player
+                client_socket.sendall(
+                        pickle.dumps(f'status: {str(gameGrid.slots)}'))
+                if gameGrid.get_winner() != 0:
                     client_socket.sendall(
-                        pickle.dumps('102: Waiting for opponent...'))
-                    logging.debug(f"Player {player_ID} is waiting")
-                    time.sleep(10)
-                elif game_server.player_turn(player_ID):
-                    # Player turn
-                    game_server.player_turn_start(player_ID)
-                    act_player, game_round, game_fin, grid = game.game_status()
-                    logging.debug(f"{game_fin}, {grid}")
-                    if (game_fin):
-                        # Send the game result if game has been ended
-                        reply = game.check_for_winner()
-                        client_socket.sendall(pickle.dump(reply))
-                        break
-                    else:
-                        # Send turn info and grid, recv move data
-                        logging.debug("Sending: 100: Player "
-                                      + f"{player_ID} turn.")
+                        pickle.dumps(f'103: Player {gameGrid.get_winner()} won! New game starting soon.'))
+                    time.sleep(5)
+                    gameGrid = GameGrid()
+                else:
+                    if (len(players) < 2):
                         client_socket.sendall(
-                            pickle.dumps(f'100: Player {player_ID} turn.'))
-                        time.sleep(1)
-                        client_socket.sendall(pickle.dumps(grid))
-                        logging.debug(f"Grid sent to player {player_ID}")
+                            pickle.dumps('102: Waiting for opponent...'))
+                        logging.debug(f"Player {player_ID} is waiting")
+                        time.sleep(2)
+                    elif game_server.player_turn(player_ID):
+                        game_server.player_turn_start(player_ID)
+                        client_socket.sendall(
+                            pickle.dumps(f'100: Your turn. Click to place "{gameGrid.get_player_marker(player_ID)}".'))
                         data = pickle.loads(client_socket.recv(2028))
-                        logging.debug(f"Received: {data}")
-                        if not isinstance(data, int):
-                            # Wrong data
-                            logging.info("Wrong data from player "
-                                         + f"{player_ID}")
+                        if not data:
+                            logging.info("Disconnected from player")
                         else:
-                            # Adding the mark
-                            reply = game.add_mark_to_slot(data)
+                            gameGrid.set_slot(int(data), player_ID)
+                            logging.debug(f"Received: {data}")
+                            reply = f'status: {str(gameGrid.slots)}'
                             logging.debug(f"Sending : {reply}")
                             client_socket.sendall(pickle.dumps(reply))
-                            client_status = pickle.loads(
-                                        client_socket.recv(2028))
-                    game_server.player_turn_end(player_ID)
-                    logging.debug(f"Player {player_ID} game status:"
-                                  + f" {client_status}")
-                    if (client_status == 'quit' or
-                                         not isinstance(data, int) or
-                                         not keep_running):
-                        # Sleep to wait client finish 
-                        time.sleep(20)
-                        break
-                else:
-                    # Waiting your turn
-                    if (client_status == 'quit'):
-                        # Sleep to wait client finish 
-                        time.sleep(20)
-                        break
-                    client_socket.sendall(
-                        pickle.dumps('102: Waiting for opponent move...'))
-                    logging.debug(f"Player {player_ID} is waiting")
-                    time.sleep(10)
+                        game_server.player_turn_end(player_ID)
+                    else:
+                        client_socket.sendall(
+                            pickle.dumps('102: Waiting for opponent move...'))
+                        logging.debug(f"Player {player_ID} is waiting")
+                        time.sleep(1)
             except Exception as e:
                 logging.error(f"Error handling player_client {player_ID}: {e}")
                 break
     logging.info("Lost connection to player")
-    # Remove player from players
+    # remove player from players
     players.pop(player_ID)
     game_server.remove_player(player_ID)
-    if (len(players) == 0) and keep_running:
+    if (len(players) == 0):
         # Set timeout if the is no player and shutdown if there is no viewer
         logging.debug(f"Player {player_ID} set timeout")
         time.sleep(timeout)
         if (len(viewers) == 0):
             handle_shutdown()
-    game.reset_game()
     client_socket.close()
 
 
@@ -195,11 +168,8 @@ def run_server(address='localhost', port=8080, timeout=10):
     timeout: server socket timeout value
     '''
     # Create TCP socket
-    global server_socket, players, viewers, game_server, game
+    global server_socket, players, viewers, game_server
     game_server = GameServer()
-    logging.info("Start the game")
-    game = TictacGame()
-    game.start_game()
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Bind the socket to address and port
@@ -278,6 +248,7 @@ if __name__ == "__main__":
                         level=args.log_level,
                         format='%(asctime)s - %(levelname)s - %(message)s')
 
+    logging.info("\n------ START ------\n")
     # Configure server arguments
     address = 'localhost'
     port = 8080
