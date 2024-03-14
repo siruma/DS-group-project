@@ -57,6 +57,11 @@ Detailed description of the system functionality and how to run the implementati
 - Any communication protocol / Internet protocol suite can be used: HTTP(S), MQTT, AMQP, CoAP, ..
 -->
 
+Python 12.3
+Pygame 2.5.2
+
+Communication: TCP
+
 
 
 
@@ -67,15 +72,34 @@ Instructions on setting up your project locally
 
 To start the project server to test it on your own computer, follow these steps:
 1. download the project (if you downloaded it as a zip file, remember to unzip the files before continuing)
-2. 
+2. Run: 
+```
+python src/server/server.py [--host (host-ip) --port (host-port)]
+```
+More information you can run: 
+```
+python src/server/server.py --help
+```
 
 
 When the server is running, you can start connecting to it with clients.
 To start a client to join a game of tic-tac-toe, you don't have to download the project files again.
 
+If you don't have pygame installed, run:
+```
+pip install pygame
+```
+
 Joining the game as a player:
 1. Make sure you've followed the steps to start the game server first, otherwise the client has nothing to connect to
-2. 
+2. Run
+```
+python src/client/client.py [--address (server-address) --port (server-port)]
+```
+More information you can run: 
+```
+python src/client/client.py --help
+```
 
 
 
