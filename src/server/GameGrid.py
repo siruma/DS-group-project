@@ -51,10 +51,16 @@ class GameGrid():
     
     def get_winner(self):
         for condition in self.win_conditions:
+            # Player 1 won
             if all(self.slots[i] == 1 for i in condition):
                 return 1
+            # Player 2 won
             if all(self.slots[i] == 2 for i in condition):
                 return 2
+        # Tie game
+        if all(self.slots[i] != 0 for i in self.slots):
+            return 3
+        # No winner or tie yet
         return 0
     
     def print_ascii(self):

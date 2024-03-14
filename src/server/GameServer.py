@@ -71,3 +71,10 @@ class GameServer:
             if (player_ID == self.current_turn):
                 return True
         return False
+    
+    '''
+    Return which player's turn it is
+
+    '''
+    def get_player_turn(self):
+        return self.current_turn

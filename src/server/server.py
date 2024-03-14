@@ -82,15 +82,13 @@ def handle_client(client_socket, player_ID, timeout):
     global players
     global gameGrid
     client_socket.sendall(pickle.dumps('Welcome'))
-    reply = ""
+    reply = ''
     if (client_authenticate(client_socket)):
         while True:
             try:
                 client_socket.sendall(
-                        pickle.dumps(f'status: {str(gameGrid.slots)}'))
+                        pickle.dumps(f'status:{str(gameGrid.slots)}:{str(gameGrid.get_winner())}'))
                 if gameGrid.get_winner() != 0:
-                    client_socket.sendall(
-                        pickle.dumps(f'103: Player {gameGrid.get_winner()} won! New game starting soon.'))
                     time.sleep(5)
                     gameGrid = GameGrid()
                 else:
@@ -98,7 +96,7 @@ def handle_client(client_socket, player_ID, timeout):
                         client_socket.sendall(
                             pickle.dumps('102: Waiting for opponent...'))
                         logging.debug(f"Player {player_ID} is waiting")
-                        time.sleep(2)
+                        time.sleep(0.2)
                     elif game_server.player_turn(player_ID):
                         game_server.player_turn_start(player_ID)
                         client_socket.sendall(
@@ -108,16 +106,12 @@ def handle_client(client_socket, player_ID, timeout):
                             logging.info("Disconnected from player")
                         else:
                             gameGrid.set_slot(int(data), player_ID)
-                            logging.debug(f"Received: {data}")
-                            reply = f'status: {str(gameGrid.slots)}'
-                            logging.debug(f"Sending : {reply}")
-                            client_socket.sendall(pickle.dumps(reply))
                         game_server.player_turn_end(player_ID)
                     else:
                         client_socket.sendall(
                             pickle.dumps('102: Waiting for opponent move...'))
                         logging.debug(f"Player {player_ID} is waiting")
-                        time.sleep(1)
+                        time.sleep(0.2)
             except Exception as e:
                 logging.error(f"Error handling player_client {player_ID}: {e}")
                 break
@@ -140,21 +134,29 @@ def handle_viewer(client_socket):
 
     client_socket: client socket
     '''
+    global gameGrid
     client_socket.sendall(pickle.dumps('Welcome'))
     game_data = ""
     while True:
         try:
             if (len(players) < 2):
-                client_socket.sendall(pickle.dumps('Waiting for opponents...'))
+                client_socket.sendall(pickle.dumps(f'102: Waiting for {2-len(players)} player(s).'))
             else:
-                game_data = "server: "  # replace with real game data
+                game_data = (f'status:{str(gameGrid.slots)}:{str(gameGrid.get_winner())}')
                 logging.debug(f"Sending: {game_data}")
                 client_socket.sendall(pickle.dumps(game_data))
-                viewer_reply = pickle.loads(client_socket.recv(2028))
-                logging.debug(f"Received: {viewer_reply}")
+                if gameGrid.get_winner() != 0:
+                    client_socket.sendall(
+                        pickle.dumps(f'103: Player {gameGrid.get_winner()} won! New game starting soon.'))
+                else:
+                    client_socket.sendall(pickle.dumps(f'102: Player {game_server.get_player_turn()} turn'))
+                # viewer_reply = pickle.loads(client_socket.recv(2028))
+                # logging.debug(f"Received: {viewer_reply}")
+            time.sleep(0.2)
         except Exception as e:
             logging.error(f"Error handling viewer_client: {e}")
             break
+        time.sleep(1)
     logging.info("Lost connection to viewer")
     client_socket.close()
 
@@ -183,16 +185,21 @@ def run_server(address='localhost', port=8080, timeout=10):
         while keep_running:
             client_socket, client_address = server_socket.accept()
             logging.info(f"Connection from {client_address}")
+            client_socket.sendall(pickle.dumps('choose'))
+            response = pickle.loads(client_socket.recv(2028))
 
             # Handle client request
-            if (len(players) < 2):
-                player_ID = len(players)+1
-                player = threading.Thread(target=handle_client,
-                                          args=(client_socket, player_ID,
-                                                timeout)).start()
-                game_server.add_player(player)
-                players[player_ID] = player
-            else:
+            if (response == "player"):
+                if (len(players) < 2):
+                    player_ID = len(players)+1
+                    player = threading.Thread(target=handle_client,
+                                            args=(client_socket, player_ID,
+                                                    timeout)).start()
+                    game_server.add_player(player)
+                    players[player_ID] = player
+                else:
+                    client_socket.sendall(pickle.dumps("Game is full"))
+            elif (response == "viewer"):
                 viewer = threading.Thread(target=handle_viewer,
                                           args=(client_socket,)).start()
                 viewers.append(viewer)
@@ -248,7 +255,6 @@ if __name__ == "__main__":
                         level=args.log_level,
                         format='%(asctime)s - %(levelname)s - %(message)s')
 
-    logging.info("\n------ START ------\n")
     # Configure server arguments
     address = 'localhost'
     port = 8080
