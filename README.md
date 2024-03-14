@@ -4,7 +4,7 @@
 
 ## About the project
 
-Tic-tac-toe is a game where two players take turns to add a marker to a 3x3 grid. Whoever gets 3 of their own markers in a line (horizontal, vertical or diagonal) wins the game.
+Tic-tac-toe is a game where two players take turns to add a marker to a 3x3 grid. Whoever gets 3 of their markers in a line (horizontal, vertical or diagonal) wins the game.
 
 An example of the grid, with one player using X and another O as the marker:
 
@@ -12,15 +12,16 @@ An example of the grid, with one player using X and another O as the marker:
   <br>O X O
   <br>X O X
 
-In this example, player with marker X would be the winner for getting 3 X's in a row diagonally.
+In this example, the player with marker X would be the winner for getting 3 X's in a row diagonally.
 
 <figure>
     <img src="assets/images/tictactoe.png"
          alt="tic-tac-toe" width="900" height="300">
     <figcaption>Example game</figcaption>
 </figure>
-This project uses a python implementation of tic-tac-toa to demonstrate a client-server structure. Clients can connect to the server as authorised “players”, which then take turns updating data (game status) on the server. 
-There is only one game of tic-tac-toe ongoing at the server at any given time.
+
+This project uses a Python implementation of tic-tac-toa to demonstrate a client-server structure. Clients can connect to the server as authorised “players, " which then take turns updating the server's data (game status). 
+Only one tic-tac-toe game is ongoing on the server at any given time.
 
 
 
@@ -46,8 +47,8 @@ Detailed descriptions of relevant principles covered in the course (architecture
 
 The system consists of a server and multiple clients. There can be a maximum of 2 player clients active, but other clients can be connected as viewers to get updates on the game status.
 - The server keeps track of the game status and updates the clients on the game status.
-- Client can display game statuses that server sends to it, and when it's the player's turn to make a move, the client will relay the player's turn (selected grid position) to the server.
-- Server keeps sending updates about the game to connected player/viewer clients until client stops acknowledgeing the updates.
+- The client can display the game statuses that the server sends to it, and when it's the player's turn to make a move, the client will relay the player's turn (selected grid position) to the server.
+- The server keeps sending updates about the game to connected player/viewer clients until the client stops acknowledging the updates.
 
 
 
@@ -99,7 +100,7 @@ pip install pygame
 ```
 
 Joining the game as a player:
-1. Make sure you've followed the steps to start the game server first, otherwise the client has nothing to connect to
+1. Make sure you've followed the steps to start the game server first, otherwise, the client has nothing to connect to
 2. Run
 ```
 python src/client/client.py [--address (server-address) --port (server-port)]
