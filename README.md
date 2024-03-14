@@ -12,7 +12,7 @@ An example of the grid, with one player using X and another O as the marker:
   <br>O X O
   <br>X O X
 
-In this example, the player with marker X would be the winner for getting 3 X's in a row diagonally.
+In the above example, the player with marker X would be the winner for getting 3 X's in a row diagonally. The game client itself looks like this:
 
 <figure>
     <img src="assets/images/tictactoe.png"
@@ -20,7 +20,7 @@ In this example, the player with marker X would be the winner for getting 3 X's 
     <figcaption>Example game</figcaption>
 </figure>
 
-This project uses a Python implementation of tic-tac-toa to demonstrate a client-server structure. Clients can connect to the server as authorised “players, " which then take turns updating the server's data (game status). 
+This project uses a Python implementation of tic-tac-toe to demonstrate a client-server structure. Clients can connect to the server as authorised “players," which then take turns updating the server's data (game status). 
 Only one tic-tac-toe game is ongoing on the server at any given time.
 
 
@@ -138,4 +138,6 @@ list resources you find helpful
 -->
 
 The original game logic for tic-tac-toe in python by krishkamani on github https://github.com/krishkamani/Tic-Tac-Toe-Game-In-Python/tree/master
+
+Python multiplayer online game tutorial by Tech With Tim on YouTube https://www.youtube.com/playlist?list=PLzMcBGfZo4-kR7Rh-7JCVDN8lm3Utumvq
 
