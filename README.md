@@ -14,7 +14,11 @@ An example of the grid, with one player using X and another O as the marker:
 
 In this example, player with marker X would be the winner for getting 3 X's in a row diagonally.
 
-
+<figure>
+    <img src="assets/images/tictactoe.png"
+         alt="tic-tac-toe" width="900" height="300">
+    <figcaption>Example game</figcaption>
+</figure>
 This project uses a python implementation of tic-tac-toa to demonstrate a client-server structure. Clients can connect to the server as authorised “players”, which then take turns updating data (game status) on the server. 
 There is only one game of tic-tac-toe ongoing at the server at any given time.
 
@@ -57,10 +61,14 @@ Detailed description of the system functionality and how to run the implementati
 - Any communication protocol / Internet protocol suite can be used: HTTP(S), MQTT, AMQP, CoAP, ..
 -->
 
-Python 12.3
-Pygame 2.5.2
+- Python 12.3
+- Pygame 2.5.2
 
-Communication: TCP
+Communication: 
+- TCP
+
+Database:
+- SQLite
 
 
 
@@ -80,7 +88,7 @@ More information you can run:
 ```
 python src/server/server.py --help
 ```
-
+<mark>HOX!</mark> : The server will generate a database file named 'user.db' in case it is not already present.
 
 When the server is running, you can start connecting to it with clients.
 To start a client to join a game of tic-tac-toe, you don't have to download the project files again.
