@@ -83,7 +83,6 @@ class Server():
         player_ID: the ID of player
         '''
         client_socket.sendall(pickle.dumps('Welcome'))
-        reply = ''
         if (self.client_authenticate(client_socket)):
             while True:
                 try:
@@ -117,10 +116,10 @@ class Server():
                     logging.error(f"Error handling player_client {player_ID}: {e}")
                     break
         logging.info("Lost connection to player")
-        # remove player from players
+        # Remove player from players
         self.players.pop(player_ID)
         self.game_server.remove_player(player_ID)
-        if (len(self.players) == 0):
+        if (len(self.players) == 0) and self.keep_running:
             # Set timeout if the is no player and shutdown if there is no viewer
             logging.debug(f"Player {player_ID} set timeout")
             time.sleep(self.timeout)
@@ -150,8 +149,6 @@ class Server():
                             pickle.dumps(f'103: Player {self.game.get_winner()} won! New game starting soon.'))
                     else:
                         client_socket.sendall(pickle.dumps(f'102: Player {self.game_server.get_player_turn()} turn'))
-                    # viewer_reply = pickle.loads(client_socket.recv(2028))
-                    # logging.debug(f"Received: {viewer_reply}")
                 time.sleep(0.2)
             except Exception as e:
                 logging.error(f"Error handling viewer_client: {e}")
