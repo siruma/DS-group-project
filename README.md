@@ -147,7 +147,29 @@ Collect numerical data of test cases:
 - Collecting logs of container operations
 - Conduct simple analysis for documentation purposes (e.g. plots or graphs)
 -->
+We were interested in the update speed perceived on the client side. The evaluation is focused on how the amount of traffic affects the performance of the system. 
 
+Evaluating the system performance by observing the time it takes for game status to update to the client instances from the player clients, as measured by observing the updates on the GUI. This measures the lag observed by the human user of the system but is not sensitive to minor changes in update speed. There was no change perceived in the speed of the updates when comparing a game with 1 or 10 viewers when the testing was done manually without precise timers. All updates were displayed on all clients, both Player and Viewer clients, in under one second, but the updates were not perceived as instantaneous. 
+
+In the table below the timestamps from the logs are compared. The server and player clients are run locally and Docker service is used to run multiple viewer clients at once (without UI, but just connecting straight to the server as a viewer client). Tested with 1, 10  and 25 viewers and no performance issues are visible yet. 25 viewers + 2 players is still a small network and the system could be tested with more stress for more comprehensive analysis. 
+
+|                                  | With 1 viewer  | With 10 viewers | With 25 viewers |
+|----------------------------------|----------------|-----------------|-----------------|
+| Average delay towards viewer(s)  |  567ms         |  510ms          |  518ms          |
+| Average delay towards players(s) |  144ms         |  122ms          |  117ms          |	
+| Total(s)                         |  285ms         |  445ms          |  487ms          |
+
+	
+The reason for not going further with the number of clients was in the data preprocessing and analysing, which we didn’t have so much time within the schedule of the project. Docker volume was used to export the logs from the viewer clients and they were then analyzed half-manually with Excel.  
+
+In each case, one tie game with 9 player moves was played.  
+- The server logged the timestamps and the game state identifier when it received a move from the player in turn.  
+- Each viewer and player client logged the timestamps when they got the updated game status and were changing the view, in addition to the corresponding game status identifier.  
+- The server timestamps of new moves were then compared to corresponding updates in clients and the average was calculated.  
+
+It is worth noting that even though the total average goes up slightly when the amount of viewers increases, it’s mainly because of the proportion of the viewers versus players. The average delay for receiving the updated game status was generally higher for viewers than for the players, which was observed in manual testing as well. The average waiting time within groups is still on the same level in all cases; the delay didn’t grow significantly for players or viewers during the tests. 
+
+It should also be noted that the viewer clients were run using Docker containers, while the players and the server were running at the local host. To get more advanced results, the data collecting/preprocessing/analysis should be done more automatically.  
 
 
 ## Acknowledgments:
