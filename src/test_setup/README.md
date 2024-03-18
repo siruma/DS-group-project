@@ -28,4 +28,4 @@ Then to test the scalability/time performance, run the server locally, and then 
 docker service create --replicas 25 --name tictactoe_server --mount source=tictactoe_volume,target=/client tictactoe_client:latest
 ```
 
-where replace 30 with the amount of replicas you want to use.
+where replace 25 with the amount of replicas you want to use.
