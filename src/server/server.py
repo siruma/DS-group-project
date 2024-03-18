@@ -145,8 +145,12 @@ class Server():
                     logging.debug(f"Sending: {game_data}")
                     client_socket.sendall(pickle.dumps(game_data))
                     if self.game.get_winner() != 0:
-                        client_socket.sendall(
-                            pickle.dumps(f'103: Player {self.game.get_winner()} won! New game starting soon.'))
+                        if self.game.get_winner() == 3: # check if there is a tie 
+                            client_socket.sendall(
+                                pickle.dumps(f'Tie game. New game starting soon.'))
+                        else:
+                            client_socket.sendall(
+                                pickle.dumps(f'103: Player {self.game.get_winner()} won! New game starting soon.'))
                     else:
                         client_socket.sendall(pickle.dumps(f'102: Player {self.game_server.get_player_turn()} turn'))
                 time.sleep(0.2)
